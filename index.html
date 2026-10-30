@@ -353,7 +353,18 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label for="event-time" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Pukul / Waktu *</label>
-                                    <input type="text" id="event-time" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green" placeholder="09:00 WIB - Selesai">
+                                    <select id="event-time" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer font-medium">
+                                        <option value="08:00 WIB - Selesai">08:00 WIB - Selesai</option>
+                                        <option value="08:30 - 12:00 WIB">08:30 - 12:00 WIB</option>
+                                        <option value="09:00 WIB - Selesai" selected>09:00 WIB - Selesai</option>
+                                        <option value="09:00 - 12:00 WIB">09:00 - 12:00 WIB</option>
+                                        <option value="10:00 - 12:00 WIB">10:00 - 12:00 WIB</option>
+                                        <option value="13:30 WIB - Selesai">13:30 WIB - Selesai</option>
+                                        <option value="13:30 - 16:30 WIB">13:30 - 16:30 WIB</option>
+                                        <option value="14:00 WIB - Selesai">14:00 WIB - Selesai</option>
+                                        <option value="14:00 - 17:00 WIB">14:00 - 17:00 WIB</option>
+                                        <option value="08:00 - 16:00 WIB (Seharian)">08:00 - 16:00 WIB (Seharian)</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label for="event-status" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Status Publikasi *</label>
@@ -1354,7 +1365,26 @@
             document.getElementById('event-title').value = event.title;
             document.getElementById('event-type').value = event.type || 'RAPAT';
             document.getElementById('event-date').value = event.date;
-            document.getElementById('event-time').value = event.time;
+
+            // Penanganan Otomatis Opsi Pukul / Waktu Sesi
+            const timeSelect = document.getElementById('event-time');
+            if (timeSelect) {
+                let optionExists = false;
+                for (let i = 0; i < timeSelect.options.length; i++) {
+                    if (timeSelect.options[i].value === event.time) {
+                        optionExists = true;
+                        break;
+                    }
+                }
+                if (!optionExists && event.time) {
+                    const customOpt = document.createElement('option');
+                    customOpt.value = event.time;
+                    customOpt.innerText = event.time;
+                    timeSelect.appendChild(customOpt);
+                }
+                timeSelect.value = event.time;
+            }
+
             document.getElementById('event-location').value = event.location;
             document.getElementById('event-lat').value = event.lat || 5.5714;
             document.getElementById('event-lng').value = event.lng || 95.3703;
