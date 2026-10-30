@@ -1,17 +1,60 @@
 /**
  * Sistem Informasi Presensi Kegiatan - UIN Ar-Raniry Banda Aceh
- * Backend Script (code.gs)
+ * Backend Script (code.gs) - Compatible with Vercel Web Hosting & GAS
  */
 
+// ID Google Spreadsheet Resmi Tujuan
+const SPREADSHEET_ID = '1ZehIX6YgrrYy6HL8bh3APB_od72blKF_Aj5talrc6go';
+
 function doGet(e) {
+  // Jika dipanggil via REST API HTTP (misal dari Vercel / External Web)
+  if (e && e.parameter && e.parameter.action) {
+    let result = [];
+    if (e.parameter.action === 'getEvents') {
+      result = getEvents();
+    } else if (e.parameter.action === 'getAttendees') {
+      result = getAttendees(e.parameter.eventId);
+    }
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Jika dibuka langsung di Google Apps Script HTML Service
   return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('Sistem Presensi Kegiatan - UIN Ar-Raniry')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ID Google Spreadsheet Resmi Tujuan
-const SPREADSHEET_ID = '1ZehIX6YgrrYy6HL8bh3APB_od72blKF_Aj5talrc6go';
+function doPost(e) {
+  let result = { success: false, error: "Invalid Request" };
+  try {
+    let postData = {};
+    if (e.postData && e.postData.contents) {
+      postData = JSON.parse(e.postData.contents);
+    }
+    const action = postData.action;
+
+    if (action === 'getEvents') {
+      result = getEvents();
+    } else if (action === 'addNewEvent') {
+      result = addNewEvent(postData.data);
+    } else if (action === 'updateEvent') {
+      result = updateEvent(postData.eventId, postData.data);
+    } else if (action === 'deleteEvent') {
+      result = deleteEvent(postData.eventId);
+    } else if (action === 'submitAttendance') {
+      result = submitAttendance(postData.data);
+    } else if (action === 'getAttendees') {
+      result = getAttendees(postData.eventId);
+    }
+  } catch (err) {
+    result = { success: false, error: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
 function getSpreadsheet() {
   try {
@@ -64,7 +107,6 @@ function parseCoord(val, defaultVal) {
   let num = typeof val === 'number' ? val : parseFloat(strVal);
   if (isNaN(num)) return defaultVal;
 
-  // Pemulihan Otomatis jika Google Sheets mengubah titik desimal menjadi ribuan (misal 55714.25 -> 5.571425)
   if (Math.abs(num) > 10000) num = num / 10000;
   else if (Math.abs(num) > 1000) num = num / 1000;
   else if (Math.abs(num) > 100) num = num / 100;
@@ -97,7 +139,7 @@ function addNewEvent(eventData) {
       eventData.time || '',
       eventData.location || '',
       eventData.status || 'Active',
-      "'" + cleanLat.toFixed(6), // Paksa Plain Text agar tidak terdistorsi format regional
+      "'" + cleanLat.toFixed(6),
       "'" + cleanLng.toFixed(6),
       parseInt(eventData.radius) || 200
     ]);
@@ -127,7 +169,7 @@ function updateEvent(eventId, eventData) {
           eventData.time || '',
           eventData.location || '',
           eventData.status || 'Active',
-          "'" + cleanLat.toFixed(6), // Paksa Plain Text agar tidak terdistorsi format regional
+          "'" + cleanLat.toFixed(6),
           "'" + cleanLng.toFixed(6),
           parseInt(eventData.radius) || 200
         ]]);
@@ -179,7 +221,6 @@ function submitAttendance(attendanceData) {
     return { success: false, error: "Data presensi tidak lengkap." };
   }
 
-  // 1. FAST-PATH: Reservasi Cache Key seketika (0 ms) untuk cegah submit ganda oleh peserta yang sama
   const cache = CacheService.getScriptCache();
   const cacheKey = 'att_' + targetEventId + '_' + Utilities.base64EncodeWebSafe(inputName).substring(0, 40);
   
@@ -187,7 +228,6 @@ function submitAttendance(attendanceData) {
     return { success: false, error: "Nama Anda sudah terdaftar dalam presensi untuk kegiatan ini." };
   }
 
-  // Kunci nama di Cache secara instan
   cache.put(cacheKey, '1', 21600);
 
   const timestamp = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy, HH:mm:ss");
@@ -199,7 +239,6 @@ function submitAttendance(attendanceData) {
     timestamp
   ];
 
-  // 2. INTERNAL SERVER RETRY LOOP WITH LOCKSERVICE: Mengantrekan penulisan secara aman di server
   const lock = LockService.getScriptLock();
   let savedSuccess = false;
 
