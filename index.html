@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Presensi Kegiatan - UIN Ar-Raniry Banda Aceh</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- html2pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Google Maps JS API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA6vvhjzGckXqC2DaJOoZvJ0sfw1tn8Trc&libraries=places"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        uin: {
+                            green: '#0b5e34',
+                            greenDark: '#04381e',
+                            gold: '#c5a059',
+                            goldDark: '#917133',
+                            bgLight: '#f4f7f5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f5;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c5a059;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #0b5e34;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative selection:bg-uin-green selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="bg-[#0b5e34] text-white shadow-xl sticky top-0 z-40 border-b-4 border-uin-gold relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between py-4 gap-4">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('public-tab')">
+                    <div class="bg-white p-1 rounded-full shadow-md border border-uin-gold flex items-center justify-center w-12 h-12 shrink-0 overflow-hidden">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/af/Lambang_UIN_Ar-Raniry.png?_=20220212032504" 
+                             alt="Logo UIN Ar-Raniry" 
+                             class="h-10 w-10 object-contain"
+                             crossorigin="anonymous"
+                             onerror="this.onerror=null; this.src='https://placehold.co/100x100/0b5e34/ffffff?text=UIN'">
+                    </div>
+                    <div class="text-center md:text-left">
+                        <span class="block text-xs uppercase tracking-widest text-uin-gold font-extrabold">Sistem Presensi Kegiatan</span>
+                        <h1 class="block text-lg sm:text-xl font-serif font-black tracking-tight leading-none text-white">UIN AR-RANIRY BANDA ACEH</h1>
+                        <span class="block text-[10px] text-emerald-100/90 font-light mt-0.5">Kopelma Darussalam • Unggul, Inovatif, Berkarakter Islami</span>
+                    </div>
+                </div>
+
+                <nav class="flex items-center bg-emerald-950/60 p-1 rounded-2xl border border-emerald-800">
+                    <button onclick="switchTab('public-tab')" id="nav-btn-public" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center space-x-2 bg-uin-gold text-uin-greenDark shadow-md">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>Presensi Publik</span>
+                    </button>
+                    <button onclick="switchTab('participants-tab')" id="nav-btn-participants" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center space-x-2 text-emerald-100 hover:text-white">
+                        <i class="fa-solid fa-users-line"></i>
+                        <span>Daftar Peserta</span>
+                    </button>
+                    <button onclick="switchTab('admin-tab')" id="nav-btn-admin" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center space-x-2 text-emerald-100 hover:text-white">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>Panel Admin</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Confirm Modal -->
+    <div id="custom-confirm-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity"><div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border-t-8 border-uin-gold">
+                <div class="bg-white px-6 pt-6 pb-4 sm:p-8 sm:pb-6">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 text-red-600 mb-4">
+                            <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-800" id="confirm-modal-title">Konfirmasi Hapus</h3>
+                        <p class="text-sm text-gray-500 mt-2" id="confirm-modal-message">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+                        <div class="w-full mt-6 flex space-x-3">
+                            <button id="confirm-cancel-btn" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-2xl text-xs sm:text-sm transition-all">Batalkan</button>
+                            <button id="confirm-proceed-btn" class="w-1/2 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-2xl text-xs sm:text-sm shadow-md transition-all">Ya, Lanjutkan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="custom-toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-500 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-l-4 border-uin-gold max-w-md">
+        <span id="toast-icon-wrapper" class="text-uin-gold text-lg"><i class="fa-solid fa-circle-info"></i></span>
+        <div><p id="toast-text" class="text-xs sm:text-sm font-semibold leading-snug"></p></div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-8 sm:px-6 lg:px-8 relative z-10">
+
+        <!-- TAB 1: PUBLIC PRESENCE FORM -->
+        <div id="public-tab" class="tab-content transition-all duration-300">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Agenda Banner -->
+                <div class="lg:col-span-3 flex flex-col gap-6">
+                    <div class="bg-gradient-to-br from-uin-green to-emerald-950 text-white rounded-3xl shadow-xl overflow-hidden border border-emerald-800/60 flex flex-col relative">
+                        <div class="bg-uin-greenDark/40 p-5 border-b border-emerald-800/60 relative flex justify-between items-center">
+                            <div>
+                                <span class="bg-uin-gold/20 text-uin-gold text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-uin-gold/30">Informasi Sesi</span>
+                                <h3 class="text-xl font-serif font-bold mt-1 text-white">Agenda Sesi</h3>
+                            </div>
+                            <i class="fa-solid fa-mosque text-uin-gold/10 text-6xl absolute -right-4 -bottom-4 transform rotate-12"></i>
+                        </div>
+                        <div class="p-5 space-y-5 relative z-10">
+                            <div>
+                                <label class="text-emerald-300 text-[10px] font-bold tracking-wider block uppercase mb-1.5">Pilih Agenda Aktif *</label>
+                                <select id="public-event-select" onchange="updatePublicBanner()" class="w-full bg-emerald-900/60 border-2 border-emerald-700/60 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-uin-gold cursor-pointer"></select>
+                            </div>
+
+                            <div id="dynamic-banner-card" class="bg-gradient-to-r from-emerald-900/90 to-emerald-800/95 p-4 rounded-xl border-2 border-uin-gold/40 relative shadow-inner">
+                                <div id="banner-placeholder" class="text-center py-8 text-emerald-200/80 space-y-2">
+                                    <i class="fa-solid fa-calendar-minus text-3xl text-uin-gold animate-pulse"></i>
+                                    <p class="text-[11px]">Menghubungkan ke agenda...</p>
+                                </div>
+                                <div id="banner-main" class="hidden space-y-4">
+                                    <div>
+                                        <span id="banner-badge" class="bg-uin-gold text-uin-greenDark text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-widest inline-block mb-1.5">RAPAT</span>
+                                        <h4 id="banner-title" class="font-serif font-bold text-base text-uin-gold leading-tight tracking-wide"></h4>
+                                    </div>
+                                    <div class="border-t border-emerald-700/60 pt-3 space-y-2.5 text-xs text-emerald-100">
+                                        <div class="flex items-start gap-2.5">
+                                            <i class="fa-solid fa-calendar-days text-uin-gold text-xs w-3.5 mt-0.5"></i>
+                                            <div>
+                                                <p class="text-[9px] text-emerald-400 font-bold uppercase">Hari / Tanggal</p>
+                                                <p id="banner-date" class="font-semibold text-xs"></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-2.5">
+                                            <i class="fa-regular fa-clock text-uin-gold text-xs w-3.5 mt-0.5"></i>
+                                            <div>
+                                                <p class="text-[9px] text-emerald-400 font-bold uppercase">Waktu Mulai</p>
+                                                <p id="banner-time" class="font-semibold text-xs"></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-2.5">
+                                            <i class="fa-solid fa-map-location-dot text-uin-gold text-xs w-3.5 mt-0.5"></i>
+                                            <div>
+                                                <p class="text-[9px] text-emerald-400 font-bold uppercase">Lokasi / Ruangan</p>
+                                                <p id="banner-location" class="font-semibold text-xs"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Presensi (Expanded) -->
+                <div class="lg:col-span-9">
+                    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 relative">
+                        <!-- Lock Location Info Badge & Live GPS Status -->
+                        <div class="bg-emerald-50 border border-emerald-200/80 text-emerald-900 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-sm mb-5">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-shield-halved text-uin-green text-base shrink-0"></i>
+                                <div>
+                                    <p class="font-bold text-[11px] leading-tight">Presensi Terkunci di Kampus UIN Ar-Raniry</p>
+                                    <p class="text-[10px] text-emerald-700">Sistem memverifikasi keberadaan GPS Anda otomatis (Radius max 200m).</p>
+                                </div>
+                            </div>
+                            <span id="user-gps-status-badge" class="text-[9px] font-bold px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-emerald-800 shrink-0 w-fit flex items-center gap-1">
+                                <i class="fa-solid fa-location-crosshairs text-uin-green animate-pulse"></i>
+                                <span>Menunggu Pilihan Sesi...</span>
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-3 border-b border-gray-100 pb-4 mb-6">
+                            <div class="bg-uin-bgLight text-uin-green p-3 rounded-xl">
+                                <i class="fa-solid fa-file-pen text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold font-serif text-uin-green">Form Presensi Digital</h2>
+                                <p class="text-xs text-gray-400">Silakan isi identitas lengkap Anda dan bubuhkan paraf digital di bawah ini.</p>
+                            </div>
+                        </div>
+
+                        <form id="attendance-form" onsubmit="handleAttendanceSubmit(event)" class="space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="space-y-1">
+                                    <label for="form-name" class="block text-[10px] font-bold text-gray-700 uppercase tracking-wide">Nama Lengkap & Gelar *</label>
+                                    <div class="relative rounded-xl shadow-sm">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs"><i class="fa-solid fa-user-check"></i></span>
+                                        <input type="text" id="form-name" required class="block w-full pl-9 pr-3 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-uin-green text-xs transition-all" placeholder="Contoh: Dr. Cut Fulanah, M.A.">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label for="form-instansi" class="block text-[10px] font-bold text-gray-700 uppercase tracking-wide">Instansi / Unit Kerja / Prodi *</label>
+                                    <div class="relative rounded-xl shadow-sm">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs"><i class="fa-solid fa-graduation-cap"></i></span>
+                                        <input type="text" id="form-instansi" required class="block w-full pl-9 pr-3 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-uin-green text-xs transition-all" placeholder="Contoh: LP2M / Prodi Teknologi Informasi">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wide flex justify-between items-center">
+                                    <span>Paraf Digital Anda *</span>
+                                    <span class="text-[9px] text-gray-400 font-normal">Goreskan jari / mouse pada kotak putih</span>
+                                </label>
+                                <div class="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-slate-50 relative">
+                                    <canvas id="signature-pad" class="w-full bg-white rounded-lg border border-gray-200 touch-none cursor-crosshair" style="height: 220px;"></canvas>
+                                    <button type="button" onclick="clearSignature()" class="absolute right-4 bottom-4 bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 font-bold px-3 py-1.5 rounded-lg text-xs shadow transition-all border border-gray-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-eraser"></i> Bersihkan
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submit-attendance-btn" class="w-full bg-gradient-to-r from-uin-green to-emerald-800 hover:from-emerald-800 hover:to-uin-green text-white font-bold py-3.5 rounded-xl shadow-md transition-all duration-300 flex items-center justify-center gap-2 border-b-4 border-emerald-950 text-xs tracking-wide">
+                                <i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i>
+                                <span>KIRIM DATA KEHADIRAN DIGITAL</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PARTICIPANTS DATABASE -->
+        <div id="participants-tab" class="tab-content transition-all duration-300 hidden">
+            <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between pb-5 border-b border-gray-100 gap-4">
+                    <div>
+                        <span class="bg-uin-gold/10 text-uin-goldDark text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-uin-gold/20">Database Publik Terbuka</span>
+                        <h2 class="text-xl sm:text-2xl font-bold font-serif text-uin-green mt-1">Daftar Peserta Terdaftar</h2>
+                        <p class="text-xs text-gray-400 mt-1">Rekapitulasi riwayat nama-nama peserta yang telah mengirim formulir kehadiran digital.</p>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" id="global-search-participants" oninput="filterGlobalParticipants()" placeholder="Cari nama atau instansi..." class="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-uin-green">
+                        </div>
+                        <select id="global-event-filter" onchange="filterGlobalParticipants()" class="w-full sm:w-48 bg-slate-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-uin-green">
+                            <option value="">Semua Agenda Sesi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar max-h-[550px] border border-gray-100 rounded-2xl shadow-inner">
+                    <table class="min-w-full divide-y divide-gray-100 text-xs text-left">
+                        <thead class="bg-slate-50 text-gray-500 uppercase text-[9px] font-extrabold tracking-widest sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="px-4 py-3 text-center w-12">No</th>
+                                <th class="px-4 py-3">Nama Lengkap</th>
+                                <th class="px-4 py-3">Asal Instansi/Prodi</th>
+                                <th class="px-4 py-3">Nama Agenda / Kegiatan</th>
+                                <th class="px-4 py-3">Waktu Presensi</th>
+                                <th class="px-4 py-3 text-center">Paraf / Tanda Tangan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="global-participants-table-body" class="divide-y divide-gray-100 text-gray-600 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: ADMIN PANEL -->
+        <div id="admin-tab" class="tab-content transition-all duration-300 hidden">
+            <div class="space-y-6">
+                <div class="flex flex-col sm:flex-row items-center justify-between bg-white rounded-2xl p-5 shadow-md border border-gray-100 gap-4">
+                    <div>
+                        <h3 class="text-sm font-extrabold uppercase tracking-widest text-uin-gold">Control Dashboard</h3>
+                        <h2 class="text-xl font-bold text-gray-800 font-serif leading-none mt-1">Workspace Administrasi Sesi</h2>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                        <button onclick="switchAdminSubTab('active')" id="sub-btn-active" class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 bg-uin-green text-white shadow-sm">
+                            <i class="fa-solid fa-folder-open mr-1"></i> Sesi Aktif
+                        </button>
+                        <button onclick="switchAdminSubTab('archived')" id="sub-btn-archived" class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 text-gray-600 hover:text-gray-900">
+                            <i class="fa-solid fa-box-archive mr-1"></i> Arsip Sesi (Selesai)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Create / Edit Event Form -->
+                    <div id="admin-create-panel" class="lg:col-span-5 bg-white rounded-3xl shadow-xl p-6 border border-gray-100 h-fit space-y-5">
+                        <div class="border-b border-gray-100 pb-3 flex justify-between items-center">
+                            <div>
+                                <h3 id="form-panel-title" class="text-base font-bold text-gray-800 font-serif"><i class="fa-solid fa-calendar-plus text-uin-green mr-1.5"></i> Daftarkan Sesi Baru</h3>
+                                <p class="text-[11px] text-gray-400 mt-0.5">Sesi baru yang didaftarkan akan langsung tampil pada portal presensi publik.</p>
+                            </div>
+                            <button type="button" id="cancel-edit-btn" onclick="resetEventForm()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-600 text-[10px] font-bold px-2.5 py-1 rounded-lg">Batal Edit</button>
+                        </div>
+                        <form id="event-form" onsubmit="handleCreateOrUpdateEvent(event)" class="space-y-4">
+                            <input type="hidden" id="editing-event-id" value="">
+                            <div>
+                                <label for="event-title" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Nama Kegiatan / Rapat *</label>
+                                <input type="text" id="event-title" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green" placeholder="Contoh: Rapat Koordinasi Kurikulum PTIPD">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="event-type" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Jenis Sesi *</label>
+                                    <select id="event-type" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer">
+                                        <option value="RAPAT">RAPAT</option>
+                                        <option value="SEMINAR">SEMINAR</option>
+                                        <option value="WEBINAR">WEBINAR</option>
+                                        <option value="WORKSHOP">WORKSHOP</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="event-date" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Tanggal *</label>
+                                    <input type="date" id="event-date" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="event-time" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Pukul / Waktu *</label>
+                                    <input type="text" id="event-time" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green" placeholder="09:00 WIB - Selesai">
+                                </div>
+                                <div>
+                                    <label for="event-status" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Status Publikasi *</label>
+                                    <select id="event-status" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer">
+                                        <option value="Active">Aktif (Dipublikasi)</option>
+                                        <option value="Archived">Selesai (Diarsipkan)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="event-location" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Lokasi / Nama Gedung *</label>
+                                <div class="relative">
+                                    <input type="text" id="event-location" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green pr-8" placeholder="Ketik nama gedung/lokasi (misal: Gedung ICT UIN Ar-Raniry)...">
+                                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-gray-400 text-xs pointer-events-none"></i>
+                                </div>
+                                <p class="text-[9px] text-gray-400 mt-1 italic">Ketik lokasi untuk mencari tempat via Google Maps. Memilih rekomendasi akan otomatis mengunci koordinat GPS.</p>
+                            </div>
+
+                            <!-- Interactive Google Map Position Picker -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <label class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                        <i class="fa-solid fa-map-pin text-uin-green"></i> Kunci Titik Lokasi Peta (Google Maps)
+                                    </label>
+                                    <span id="location-lock-badge" class="text-[9px] font-bold px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200">
+                                        <i class="fa-solid fa-lock-open mr-1"></i> Belum Terkunci
+                                    </span>
+                                </div>
+
+                                <!-- Quick Preset Gedung Dropdown Kampus UIN Ar-Raniry -->
+                                <div class="bg-emerald-50/70 p-2.5 rounded-2xl border border-emerald-200">
+                                    <label class="block text-[9px] font-extrabold text-uin-green uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <i class="fa-solid fa-building-columns text-uin-gold"></i> Preset Gedung Spesifik Kampus UIN Ar-Raniry:
+                                    </label>
+                                    <select id="preset-building-select" onchange="selectPresetBuilding(this.value)" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-bold text-uin-greenDark focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer shadow-sm">
+                                        <option value="">-- Pilih Gedung Spesifik Kampus --</option>
+                                        <option value="5.571425,95.370300">Gedung Rektorat UIN Ar-Raniry</option>
+                                        <option value="5.570211,95.369821">Auditorium Prof. Ali Hasjmy</option>
+                                        <option value="5.572180,95.371150">Gedung ICT Center / PTIPD</option>
+                                        <option value="5.569850,95.368900">Gedung Pascasarjana UIN</option>
+                                        <option value="5.573100,95.371900">Fakultas Sains & Teknologi (FST)</option>
+                                        <option value="5.570800,95.369100">Fakultas Tarbiyah & Keguruan (FTK)</option>
+                                        <option value="5.571900,95.369500">Fakultas Ekonomi & Bisnis Islam (FEBI)</option>
+                                        <option value="5.571200,95.368500">Fakultas Adab & Humaniora (FAH)</option>
+                                        <option value="5.570100,95.370800">Fakultas Syariah & Hukum (FSH)</option>
+                                        <option value="5.571500,95.368800">Fakultas Dakwah & Komunikasi (FDK)</option>
+                                        <option value="5.571100,95.370700">Perpustakaan Utama UIN Ar-Raniry</option>
+                                        <option value="5.571800,95.370100">Gedung LP2M & LPM UIN</option>
+                                        <option value="5.569300,95.368200">Gedung Museum Center for Peace</option>
+                                    </select>
+                                </div>
+
+                                <div id="admin-map" class="w-full h-52 rounded-xl border-2 border-slate-200 shadow-inner"></div>
+                                <p class="text-[9px] text-gray-400 italic">Tap / klik pada peta atau geser marker untuk mengunci posisi gedung acara secara otomatis.</p>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label for="event-lat" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Latitude *</label>
+                                    <input type="number" step="any" id="event-lat" value="5.5714" required oninput="updateMapFromInputs()" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green" placeholder="5.5714">
+                                </div>
+                                <div>
+                                    <label for="event-lng" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Longitude *</label>
+                                    <input type="number" step="any" id="event-lng" value="95.3703" required oninput="updateMapFromInputs()" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green" placeholder="95.3703">
+                                </div>
+                                <div>
+                                    <label for="event-radius" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Radius (m) *</label>
+                                    <input type="number" id="event-radius" value="200" required oninput="updateMapFromInputs()" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green font-bold text-uin-green" placeholder="200">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" onclick="lockUinCampusLocation()" class="w-full bg-uin-green hover:bg-uin-greenDark text-white font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1.5 border border-emerald-950 shadow-sm">
+                                    <i class="fa-solid fa-mosque text-uin-gold"></i> Kunci Kampus UIN
+                                </button>
+                                <button type="button" onclick="getAdminCurrentLocation()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1.5 border border-slate-200">
+                                    <i class="fa-solid fa-location-crosshairs text-uin-green"></i> GPS Saya Saat Ini
+                                </button>
+                            </div>
+                            <button type="submit" id="create-event-btn" class="w-full bg-uin-green hover:bg-uin-greenDark text-white font-bold py-3 rounded-xl shadow-md transition text-xs tracking-wider border-b-2 border-emerald-950 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> DEPLOY KE DATABASE
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Manage Agendas & Attendees -->
+                    <div id="admin-display-panel" class="lg:col-span-7 space-y-6">
+                        <div class="bg-white rounded-3xl shadow-xl p-5 border border-gray-100">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                                <h3 id="agenda-table-title" class="text-sm font-bold text-gray-800 uppercase tracking-wider"><i class="fa-solid fa-list-check text-uin-gold"></i> Daftar Agenda Sesi</h3>
+                                <div class="flex items-center gap-2">
+                                    <span id="event-count-badge" class="bg-uin-bgLight text-uin-green text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-uin-green/10">0 Agenda</span>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto custom-scrollbar max-h-80 mt-4 rounded-xl border border-slate-100">
+                                <table class="min-w-full divide-y divide-gray-100 text-xs text-left">
+                                    <thead class="bg-slate-50 text-gray-500 uppercase text-[9px] font-extrabold tracking-widest">
+                                        <tr>
+                                            <th class="px-4 py-3">Nama Kegiatan</th>
+                                            <th class="px-4 py-3">Rincian Waktu & Lokasi</th>
+                                            <th class="px-4 py-3 text-center">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-event-table" class="divide-y divide-gray-100 text-gray-600"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Attendee View Section -->
+                        <div class="bg-white rounded-3xl shadow-xl p-5 border border-gray-100">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                                <div>
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Arsip Riwayat Presensi</span>
+                                    <h3 id="selected-event-display" class="text-sm font-bold text-uin-green mt-0.5">Pilih Agenda Kegiatan</h3>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="exportToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm">
+                                        <i class="fa-solid fa-file-excel text-emerald-700"></i> Ekspor CSV
+                                    </button>
+                                    <button onclick="triggerPrintPDFForCurrentEvent()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm">
+                                        <i class="fa-solid fa-file-pdf"></i> Unduh PDF Sesi
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto custom-scrollbar max-h-80 mt-4 rounded-xl border border-slate-100">
+                                <table class="min-w-full divide-y divide-gray-100 text-xs text-left">
+                                    <thead class="bg-slate-50 text-gray-500 uppercase text-[9px] font-extrabold tracking-widest">
+                                        <tr>
+                                            <th class="px-4 py-3">Nama Lengkap</th>
+                                            <th class="px-4 py-3">Asal Instansi/Prodi</th>
+                                            <th class="px-4 py-3">Waktu Presensi</th>
+                                            <th class="px-4 py-3 text-center">Tanda Tangan / Paraf</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendee-table-body" class="divide-y divide-gray-100 text-gray-600">
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-12 text-center text-gray-400">
+                                                <i class="fa-solid fa-clipboard-user text-4xl mb-2 text-slate-300 block"></i>
+                                                Silakan klik "Lihat" pada salah satu agenda di atas.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ADMIN PIN MODAL (WITH EYE ICON TOGGLE) -->
+    <div id="admin-pin-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity"><div class="absolute inset-0 bg-gray-950/60 backdrop-blur-sm"></div></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border-t-8 border-uin-gold">
+                <div class="bg-white px-6 pt-6 pb-4 sm:p-8 sm:pb-6">
+                    <div class="flex flex-col items-center">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-50 text-uin-green mb-4">
+                            <i class="fa-solid fa-lock-open text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 text-center">Verifikasi Akses Admin</h3>
+                        <p class="text-xs text-gray-400 text-center mt-1">Masukkan Password untuk mengelola ruang administrasi.</p>
+                        <div class="w-full mt-6 space-y-4">
+                            <!-- Password Input with Show/Hide Eye Toggle -->
+                            <div class="relative">
+                                <input type="password" id="admin-pin-input" placeholder="Masukkan Password Admin" class="w-full px-4 py-3 pr-11 text-center text-lg tracking-widest rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-uin-green font-bold">
+                                <button type="button" onclick="toggleAdminPinVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-uin-green focus:outline-none">
+                                    <i id="admin-pin-eye-icon" class="fa-solid fa-eye text-base"></i>
+                                </button>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button onclick="closeAdminGate()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-3 rounded-xl text-sm transition">Batal</button>
+                                <button onclick="verifyAdminPin()" class="w-1/2 bg-uin-green hover:bg-uin-greenDark text-white font-bold py-3 rounded-xl text-sm shadow-md transition">Masuk Panel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CETAK PDF (SOLUTION FOR BLANK PDF IN GAS IFRAME) -->
+    <div id="pdf-render-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-4xl w-full my-8 relative flex flex-col items-center">
+            <div id="pdf-status-banner" class="w-full bg-uin-green text-white p-4 text-center flex items-center justify-center gap-3">
+                <i class="fa-solid fa-circle-notch animate-spin text-xl text-uin-gold"></i>
+                <span class="font-bold text-sm">Menyiapkan Dokumen PDF Resmi UIN Ar-Raniry...</span>
+            </div>
+            <div class="w-full overflow-x-auto p-4 flex justify-center bg-gray-100">
+                <div id="pdf-print-area" class="bg-white p-10 text-black shadow-lg" style="width: 794px; min-height: 1123px; font-family: 'Times New Roman', Times, serif;">
+                    <!-- Inserted Dynamically via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Main Script -->
+    <script>
+        const isGasEnv = typeof google !== 'undefined' && google.script && google.script.run;
+
+        // Bridge Database Object for Google Apps Script & Standalone Environment
+        const Database = {
+            getEvents: function() {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || []); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .getEvents();
+                    } else {
+                        resolve(activeEventsList || []);
+                    }
+                });
+            },
+            addNewEvent: function(eventData) {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || { success: false }); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .addNewEvent(eventData);
+                    } else {
+                        resolve({ success: true, id: 'EVT-' + Date.now() });
+                    }
+                });
+            },
+            updateEvent: function(eventId, eventData) {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || { success: false }); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .updateEvent(eventId, eventData);
+                    } else {
+                        resolve({ success: true });
+                    }
+                });
+            },
+            deleteEvent: function(eventId) {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || { success: false }); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .deleteEvent(eventId);
+                    } else {
+                        resolve({ success: true });
+                    }
+                });
+            },
+            submitAttendance: function(attendanceData) {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || { success: false }); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .submitAttendance(attendanceData);
+                    } else {
+                        resolve({ success: true });
+                    }
+                });
+            },
+            getAttendees: function(eventId) {
+                return new Promise(function(resolve, reject) {
+                    if (isGasEnv) {
+                        google.script.run
+                            .withSuccessHandler(function(res) { resolve(res || []); })
+                            .withFailureHandler(function(err) { reject(err); })
+                            .getAttendees(eventId);
+                    } else {
+                        resolve([]);
+                    }
+                });
+            }
+        };
+
+        // Pembersih Sanitasi Koordinat GPS di Frontend (Aman dari Tanda Koma Format Indonesia)
+        function fixCoord(val, defaultVal) {
+            if (val === null || val === undefined || val === '') return defaultVal;
+            let strVal = String(val).replace(',', '.').trim();
+            let num = parseFloat(strVal);
+            if (isNaN(num)) return defaultVal;
+            if (Math.abs(num) > 10000) num = num / 10000;
+            else if (Math.abs(num) > 100) num = num / 100;
+            if (defaultVal < 10 && Math.abs(num) > 90) num = num / 10;
+            return num;
+        }
+
+        function selectPresetBuilding(val) {
+            if (!val) return;
+            const parts = val.split(',');
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                setLockedCoordinates(lat, lng);
+                const selectEl = document.getElementById('preset-building-select');
+                if (selectEl && selectEl.selectedIndex > 0) {
+                    const selectedText = selectEl.options[selectEl.selectedIndex].text;
+                    const locInput = document.getElementById('event-location');
+                    if (locInput) locInput.value = selectedText;
+                    showToast("Titik lokasi dikunci di " + selectedText);
+                }
+            }
+        }
+
+        // Signature Pad Variables & Initialization
+        let canvas, ctx, isDrawing = false, hasSigned = false, lastX = 0, lastY = 0;
+
+        function initSignaturePad() {
+            canvas = document.getElementById('signature-pad');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width > 0 ? rect.width : 600;
+            canvas.height = rect.height > 0 ? rect.height : 220;
+            
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            canvas.removeEventListener('mousedown', startDrawing);
+            canvas.removeEventListener('mousemove', draw);
+            canvas.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('mouseleave', stopDrawing);
+            
+            canvas.removeEventListener('touchstart', startDrawing);
+            canvas.removeEventListener('touchmove', draw);
+            canvas.removeEventListener('touchend', stopDrawing);
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function getCoords(e) {
+            if (!canvas) return { x: 0, y: 0 };
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function startDrawing(e) { isDrawing = true; const c = getCoords(e); lastX = c.x; lastY = c.y; hasSigned = true; if (e.touches) e.preventDefault(); }
+        function draw(e) { if (!isDrawing) return; const c = getCoords(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(c.x, c.y); ctx.stroke(); lastX = c.x; lastY = c.y; if (e.touches) e.preventDefault(); }
+        function stopDrawing() { isDrawing = false; }
+        function clearSignature() { if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); hasSigned = false; }
+
+        function getCompressedSignature() {
+            if (!canvas || !hasSigned) return '';
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 300;
+            tempCanvas.height = 100;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, 300, 100);
+            tempCtx.drawImage(canvas, 0, 0, 300, 100);
+            return tempCanvas.toDataURL('image/png');
+        }
+
+        // Geofencing Haversine Formula
+        function calculateDistanceMeter(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return Math.round(R * c);
+        }
+
+        // Google Maps JS API Integration
+        let adminMap = null, adminMarker = null, adminCircle = null;
+
+        function initAdminMap(lat = 5.5714, lng = 95.3703, radius = 200) {
+            const mapContainer = document.getElementById('admin-map');
+            if (!mapContainer) return;
+
+            const centerPos = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+            if (typeof google !== 'undefined' && google.maps) {
+                adminMap = new google.maps.Map(mapContainer, {
+                    center: centerPos,
+                    zoom: 17,
+                    mapTypeId: 'roadmap'
+                });
+
+                adminMarker = new google.maps.Marker({
+                    position: centerPos,
+                    map: adminMap,
+                    draggable: true,
+                    title: 'Titik Lokasi Acara'
+                });
+
+                adminCircle = new google.maps.Circle({
+                    strokeColor: '#0b5e34',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#c5a059',
+                    fillOpacity: 0.25,
+                    map: adminMap,
+                    center: centerPos,
+                    radius: parseFloat(radius)
+                });
+
+                adminMap.addListener('click', function(e) {
+                    const clickedLat = e.latLng.lat();
+                    const clickedLng = e.latLng.lng();
+                    setLockedCoordinates(clickedLat, clickedLng);
+                });
+
+                adminMarker.addListener('dragend', function() {
+                    const pos = adminMarker.getPosition();
+                    setLockedCoordinates(pos.lat(), pos.lng());
+                });
+
+                initLocationAutocomplete();
+            }
+        }
+
+        let locationAutocomplete = null;
+
+        function initLocationAutocomplete() {
+            const input = document.getElementById('event-location');
+            if (!input || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+
+            if (locationAutocomplete) return;
+
+            const uinBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(5.5500, 95.3500),
+                new google.maps.LatLng(5.6000, 95.4000)
+            );
+
+            locationAutocomplete = new google.maps.places.Autocomplete(input, {
+                bounds: uinBounds,
+                strictBounds: false,
+                fields: ["geometry", "name", "formatted_address"]
+            });
+
+            locationAutocomplete.addListener('place_changed', function() {
+                const place = locationAutocomplete.getPlace();
+                if (place && place.geometry && place.geometry.location) {
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    setLockedCoordinates(lat, lng);
+                    showToast("Lokasi ditemukan & koordinat GPS otomatis dikunci!");
+                }
+            });
+        }
+
+        function lockUinCampusLocation() {
+            setLockedCoordinates(5.5714, 95.3703);
+            showToast("Titik lokasi dikunci di Pusat Kampus UIN Ar-Raniry Banda Aceh!");
+        }
+
+        function setLockedCoordinates(lat, lng) {
+            const cleanLat = fixCoord(lat, 5.571425);
+            const cleanLng = fixCoord(lng, 95.370300);
+            const formattedLat = cleanLat.toFixed(6);
+            const formattedLng = cleanLng.toFixed(6);
+            const radiusInput = document.getElementById('event-radius');
+            const radius = radiusInput ? parseFloat(String(radiusInput.value).replace(',', '.')) || 200 : 200;
+
+            document.getElementById('event-lat').value = formattedLat;
+            document.getElementById('event-lng').value = formattedLng;
+
+            const newPos = { lat: cleanLat, lng: cleanLng };
+
+            if (adminMarker) adminMarker.setPosition(newPos);
+            if (adminCircle) {
+                adminCircle.setCenter(newPos);
+                adminCircle.setRadius(radius);
+            }
+            if (adminMap) adminMap.panTo(newPos);
+
+            isLocationLocked = true;
+            const badge = document.getElementById('location-lock-badge');
+            if (badge) {
+                badge.className = "text-[9px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200";
+                badge.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Terkunci (${formattedLat}, ${formattedLng})`;
+            }
+        }
+
+        function updateMapFromInputs() {
+            const lat = fixCoord(document.getElementById('event-lat').value, 5.571425);
+            const lng = fixCoord(document.getElementById('event-lng').value, 95.370300);
+            const radiusInput = document.getElementById('event-radius');
+            const radius = radiusInput ? parseFloat(String(radiusInput.value).replace(',', '.')) || 200 : 200;
+
+            const pos = { lat: lat, lng: lng };
+            if (adminMarker) adminMarker.setPosition(pos);
+            if (adminCircle) {
+                adminCircle.setCenter(pos);
+                adminCircle.setRadius(radius);
+            }
+            if (adminMap) adminMap.panTo(pos);
+
+            isLocationLocked = true;
+            const badge = document.getElementById('location-lock-badge');
+            if (badge) {
+                badge.className = "text-[9px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200";
+                badge.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Terkunci (${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+            }
+        }
+
+        function getAdminCurrentLocation() {
+            if (!navigator.geolocation) {
+                showToast("GPS tidak didukung oleh browser Anda", true);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                setLockedCoordinates(pos.coords.latitude, pos.coords.longitude);
+                showToast("Koordinat GPS Anda berhasil dikunci!");
+            }, function() {
+                showToast("Gagal mengakses GPS", true);
+            }, { enableHighAccuracy: true });
+        }
+
+        // State Global UI
+        let activeEventsList = [];
+        let currentAdminSubTab = 'active';
+        let currentSelectedEventId = '';
+        let currentLoadedAttendees = [];
+        let isAdminLoggedIn = false;
+        let isLocationLocked = false;
+
+        function refreshDatabase() {
+            Database.getEvents().then(function(events) {
+                activeEventsList = events;
+                renderEventsDropdown();
+                renderEventsTable();
+                updatePublicBanner();
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            refreshDatabase();
+            initSignaturePad();
+        });
+
+        function switchTab(tabId) {
+            if (tabId === 'admin-tab' && !isAdminLoggedIn) { openAdminGate(); return; }
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.add('hidden'); });
+            document.getElementById(tabId).classList.remove('hidden');
+
+            ['public-tab', 'participants-tab', 'admin-tab'].forEach(function(tab) {
+                const btn = document.getElementById('nav-btn-' + tab.replace('-tab', ''));
+                if (btn) {
+                    btn.className = tab === tabId 
+                        ? "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center space-x-2 bg-uin-gold text-uin-greenDark shadow-md"
+                        : "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center space-x-2 text-emerald-100 hover:text-white";
+                }
+            });
+
+            if (tabId === 'admin-tab') {
+                renderEventsTable();
+                setTimeout(function() { initAdminMap(5.5714, 95.3703, 200); }, 300);
+            }
+            if (tabId === 'public-tab') setTimeout(initSignaturePad, 100);
+            if (tabId === 'participants-tab') loadGlobalParticipants();
+        }
+
+        function openAdminGate() {
+            if (isAdminLoggedIn) { switchTab('admin-tab'); return; }
+            document.getElementById('admin-pin-modal').classList.remove('hidden');
+            document.getElementById('admin-pin-input').value = '';
+        }
+
+        function closeAdminGate() {
+            document.getElementById('admin-pin-modal').classList.add('hidden');
+        }
+
+        function verifyAdminPin() {
+            const pin = document.getElementById('admin-pin-input').value;
+            if (pin === '11223344') {
+                isAdminLoggedIn = true;
+                closeAdminGate();
+                showToast("Akses Administrasi Diverifikasi!");
+                switchTab('admin-tab');
+            } else {
+                showToast("Password Salah!", true);
+            }
+        }
+
+        function toggleAdminPinVisibility() {
+            const input = document.getElementById('admin-pin-input');
+            const icon = document.getElementById('admin-pin-eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function switchAdminSubTab(subTab) {
+            currentAdminSubTab = subTab;
+            const activeBtn = document.getElementById('sub-btn-active');
+            const archivedBtn = document.getElementById('sub-btn-archived');
+
+            if (subTab === 'active') {
+                activeBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-uin-green text-white shadow-sm";
+                archivedBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition text-gray-600 hover:text-gray-900";
+            } else {
+                archivedBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-uin-green text-white shadow-sm";
+                activeBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition text-gray-600 hover:text-gray-900";
+            }
+            renderEventsTable();
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('custom-toast');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.replace('translate-y-20', 'translate-y-0');
+            toast.classList.replace('opacity-0', 'opacity-100');
+            setTimeout(function() {
+                toast.classList.replace('translate-y-0', 'translate-y-20');
+                toast.classList.replace('opacity-100', 'opacity-0');
+            }, 3000);
+        }
+
+        function showCustomConfirm(title, message, callback) {
+            const modal = document.getElementById('custom-confirm-modal');
+            document.getElementById('confirm-modal-title').innerText = title;
+            document.getElementById('confirm-modal-message').innerText = message;
+            modal.classList.remove('hidden');
+
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+            const proceedBtn = document.getElementById('confirm-proceed-btn');
+
+            const cleanup = function() {
+                modal.classList.add('hidden');
+                cancelBtn.removeEventListener('click', onCancel);
+                proceedBtn.removeEventListener('click', onProceed);
+            };
+            const onCancel = function() { cleanup(); };
+            const onProceed = function() { cleanup(); callback(); };
+
+            cancelBtn.addEventListener('click', onCancel);
+            proceedBtn.addEventListener('click', onProceed);
+        }
+
+        function renderEventsDropdown() {
+            const select = document.getElementById('public-event-select');
+            if (!select) return;
+            select.innerHTML = '';
+            const active = activeEventsList.filter(function(e) { return e.status === 'Active'; });
+            if (active.length === 0) {
+                select.innerHTML = '<option value="">-- Tidak Ada Sesi Aktif --</option>';
+                return;
+            }
+            active.forEach(function(e) {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.innerText = `[${e.type}] ${e.title}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function updatePublicBanner() {
+            const selectId = document.getElementById('public-event-select').value;
+            const placeholder = document.getElementById('banner-placeholder');
+            const main = document.getElementById('banner-main');
+
+            if (!selectId) {
+                placeholder.classList.remove('hidden');
+                main.classList.add('hidden');
+                return;
+            }
+
+            const event = activeEventsList.find(function(e) { return e.id === selectId; });
+            if (event) {
+                placeholder.classList.add('hidden');
+                main.classList.remove('hidden');
+                document.getElementById('banner-badge').innerText = event.type;
+                document.getElementById('banner-title').innerText = event.title;
+                document.getElementById('banner-date').innerText = event.date;
+                document.getElementById('banner-time').innerText = event.time;
+                document.getElementById('banner-location').innerText = event.location;
+
+                // Pendeteksian Otomatis Lokasi GPS Peserta saat agenda dipilih
+                autoDetectUserLocation();
+            }
+        }
+
+        let cachedUserPosition = null;
+
+        function autoDetectUserLocation() {
+            const badge = document.getElementById('user-gps-status-badge');
+            if (!navigator.geolocation) {
+                if (badge) badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> GPS Tidak Didukung`;
+                return;
+            }
+
+            if (badge) {
+                badge.className = "text-[9px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 shrink-0 w-fit flex items-center gap-1";
+                badge.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-amber-600 mr-1"></i> Mendeteksi Lokasi GPS...`;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    cachedUserPosition = pos;
+                    const accuracy = Math.round(pos.coords.accuracy);
+                    if (badge) {
+                        badge.className = "text-[9px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 border border-emerald-300 text-emerald-900 shrink-0 w-fit flex items-center gap-1";
+                        badge.innerHTML = `<i class="fa-solid fa-circle-check text-uin-green mr-1"></i> GPS Terdeteksi (Akurasi ±${accuracy}m)`;
+                    }
+                },
+                function(err) {
+                    if (badge) {
+                        badge.className = "text-[9px] font-bold px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 shrink-0 w-fit flex items-center gap-1";
+                        badge.innerHTML = `<i class="fa-solid fa-location-crosshairs mr-1"></i> Izin GPS Diperlukan`;
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        function handleAttendanceSubmit(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('public-event-select').value;
+            if (!eventId) { showToast("Pilih Sesi Kegiatan aktif terlebih dahulu!", true); return; }
+            if (!hasSigned) { showToast("Harap bubuhkan Paraf Digital Anda!", true); return; }
+
+            const event = activeEventsList.find(function(evt) { return evt.id === eventId; });
+            if (!event) { showToast("Data agenda tidak ditemukan!", true); return; }
+
+            const submitBtn = document.getElementById('submit-attendance-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Memeriksa Sinyal GPS & Presensi...';
+
+            if (!navigator.geolocation) {
+                showToast("Perangkat/browser Anda tidak mendukung GPS Lokasi!", true);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const userLat = pos.coords.latitude;
+                    const userLng = pos.coords.longitude;
+                    const gpsAccuracy = pos.coords.accuracy || 0;
+                    
+                    // Sanitasi koordinat target kegiatan
+                    const targetLat = fixCoord(event.lat, 5.5714);
+                    const targetLng = fixCoord(event.lng, 95.3703);
+                    const maxRadius = parseInt(event.radius) || 200;
+
+                    let rawDistance = calculateDistanceMeter(userLat, userLng, targetLat, targetLng);
+                    let effectiveDistance = Math.max(0, rawDistance - Math.round(gpsAccuracy / 2));
+
+                    if (effectiveDistance > maxRadius && rawDistance > maxRadius) {
+                        showToast(`Presensi Gagal! Jarak Anda terdeteksi ${rawDistance}m dari lokasi (Batas Maksimal: ${maxRadius}m). Pastikan GPS HP diizinkan dan dalam mode Presisi Tinggi.`, true);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                        return;
+                    }
+
+                    const attendanceData = {
+                        eventId: eventId,
+                        name: document.getElementById('form-name').value.trim(),
+                        instansi: document.getElementById('form-instansi').value.trim(),
+                        status: getCompressedSignature()
+                    };
+
+                    sendAttendanceWithRetry(attendanceData, 1, 8, submitBtn);
+                },
+                function(err) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                    showToast("Gagal mengakses GPS HP/Browser! Pastikan izin lokasi (Location) diaktifkan pada peramban Anda.", true);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        function sendAttendanceWithRetry(data, attempt, maxAttempts, submitBtn) {
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menyimpan Presensi (Antrean #${attempt})...`;
+            Database.submitAttendance(data).then(function(res) {
+                if (res.success) {
+                    showToast("Presensi Berhasil Dikirim & Tersimpan!");
+                    document.getElementById('form-name').value = '';
+                    document.getElementById('form-instansi').value = '';
+                    clearSignature();
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                } else {
+                    if (attempt < maxAttempts && res.error && (res.error.includes("Antrean") || res.error.includes("sibuk") || res.error.includes("server") || res.error.includes("lock"))) {
+                        const jitter = Math.floor(Math.random() * 600) + 400;
+                        setTimeout(function() {
+                            sendAttendanceWithRetry(data, attempt + 1, maxAttempts, submitBtn);
+                        }, jitter);
+                    } else {
+                        showToast(res.error || "Gagal mengirim presensi.", true);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                    }
+                }
+            }).catch(function() {
+                if (attempt < maxAttempts) {
+                    const jitter = Math.floor(Math.random() * 800) + 500;
+                    setTimeout(function() {
+                        sendAttendanceWithRetry(data, attempt + 1, maxAttempts, submitBtn);
+                    }, jitter);
+                } else {
+                    showToast("Sistem sedang sibuk. Silakan klik tombol Kirim sekali lagi.", true);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-file-invoice text-uin-gold text-sm"></i><span>KIRIM DATA KEHADIRAN DIGITAL</span>';
+                }
+            });
+        }
+
+        function loadGlobalParticipants() {
+            const tableBody = document.getElementById('global-participants-table-body');
+            const filterSelect = document.getElementById('global-event-filter');
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8"><i class="fa-solid fa-spinner animate-spin text-uin-green text-2xl"></i></td></tr>';
+
+            filterSelect.innerHTML = '<option value="">Semua Sesi Aktif</option>';
+            const activeOnly = activeEventsList.filter(function(evt) { return evt.status === 'Active'; });
+            activeOnly.forEach(function(evt) {
+                const opt = document.createElement('option');
+                opt.value = evt.id;
+                opt.innerText = evt.title;
+                filterSelect.appendChild(opt);
+            });
+
+            const promises = activeOnly.map(function(evt) {
+                return Database.getAttendees(evt.id).then(function(list) {
+                    return list.map(function(a) { return Object.assign({}, a, { eventTitle: evt.title }); });
+                });
+            });
+
+            Promise.all(promises).then(function(results) {
+                const allParticipants = results.flat();
+                renderGlobalParticipantsTable(allParticipants);
+            });
+        }
+
+        function filterGlobalParticipants() {
+            const query = document.getElementById('global-search-participants').value.toLowerCase();
+            const filterId = document.getElementById('global-event-filter').value;
+
+            const activeOnly = activeEventsList.filter(function(evt) { return evt.status === 'Active'; });
+            const promises = activeOnly.map(function(evt) {
+                return Database.getAttendees(evt.id).then(function(list) {
+                    return list.map(function(a) { return Object.assign({}, a, { eventTitle: evt.title }); });
+                });
+            });
+
+            Promise.all(promises).then(function(results) {
+                let filtered = results.flat();
+                if (filterId) filtered = filtered.filter(function(p) { return p.eventId === filterId; });
+                if (query) {
+                    filtered = filtered.filter(function(p) {
+                        return (p.name && p.name.toLowerCase().includes(query)) || (p.instansi && p.instansi.toLowerCase().includes(query));
+                    });
+                }
+                renderGlobalParticipantsTable(filtered);
+            });
+        }
+
+        function renderGlobalParticipantsTable(list) {
+            const tableBody = document.getElementById('global-participants-table-body');
+            tableBody.innerHTML = '';
+            if (list.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-400">Belum ada riwayat presensi.</td></tr>';
+                return;
+            }
+            list.forEach(function(att, idx) {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-gray-100";
+                let sigMarkup = att.status && att.status.startsWith('data:image/')
+                    ? `<img src="${att.status}" class="h-8 max-w-[100px] mx-auto object-contain bg-white border border-gray-200 rounded p-0.5">`
+                    : `<span class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100">${att.status || 'Hadir'}</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-center font-bold text-gray-400">${idx + 1}</td>
+                    <td class="px-4 py-3 font-bold text-gray-800">${att.name}</td>
+                    <td class="px-4 py-3 text-gray-500">${att.instansi}</td>
+                    <td class="px-4 py-3 font-serif font-bold text-uin-green">${att.eventTitle || '-'}</td>
+                    <td class="px-4 py-3 text-gray-400 font-mono">${att.timestamp}</td>
+                    <td class="px-4 py-3 text-center">${sigMarkup}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function renderEventsTable() {
+            const table = document.getElementById('admin-event-table');
+            const badge = document.getElementById('event-count-badge');
+            if (!table) return;
+
+            const filtered = activeEventsList.filter(function(e) { return currentAdminSubTab === 'active' ? e.status === 'Active' : e.status === 'Archived'; });
+            badge.innerText = `${filtered.length} Agenda`;
+
+            if (filtered.length === 0) {
+                table.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-gray-400">Tidak ada agenda pada kategori ini.</td></tr>';
+                return;
+            }
+
+            table.innerHTML = '';
+            filtered.forEach(function(e) {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-gray-800">
+                        <span class="bg-uin-bgLight text-uin-green text-[9px] font-extrabold px-2 py-0.5 rounded border border-uin-green/20 uppercase tracking-widest mr-2">${e.type}</span>
+                        ${e.title}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">
+                        <p class="font-bold">${e.date}</p>
+                        <p>${e.time} • ${e.location}</p>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="viewAttendeesList('${e.id}', '${e.title}')" class="bg-uin-green hover:bg-uin-greenDark text-white font-bold px-2 py-1 rounded text-[10px] shadow-sm transition" title="Lihat Peserta">
+                                <i class="fa-solid fa-users"></i>
+                            </button>
+                            <button onclick="editEvent('${e.id}')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-2 py-1 rounded text-[10px] shadow-sm transition" title="Edit Sesi">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="triggerPrintPDF('${e.id}')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-2 py-1 rounded text-[10px] shadow-sm transition" title="Unduh PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </button>
+                            <button onclick="deleteEventForever('${e.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-2 py-1 rounded text-[10px] transition" title="Hapus">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                table.appendChild(tr);
+            });
+        }
+
+        function handleCreateOrUpdateEvent(e) {
+            e.preventDefault();
+
+            if (!isLocationLocked) {
+                showToast("Harap tap/kunci titik lokasi pada peta terlebih dahulu sebelum mempublikasikan sesi!", true);
+                return;
+            }
+
+            const editingId = document.getElementById('editing-event-id').value;
+            const eventData = {
+                title: document.getElementById('event-title').value.trim(),
+                type: document.getElementById('event-type').value,
+                date: document.getElementById('event-date').value,
+                time: document.getElementById('event-time').value.trim(),
+                location: document.getElementById('event-location').value.trim(),
+                lat: parseFloat(document.getElementById('event-lat').value) || 5.5714,
+                lng: parseFloat(document.getElementById('event-lng').value) || 95.3703,
+                radius: parseInt(document.getElementById('event-radius').value) || 200,
+                status: document.getElementById('event-status').value
+            };
+
+            if (editingId) {
+                Database.updateEvent(editingId, eventData).then(function(res) {
+                    if (res.success) {
+                        showToast("Sesi kegiatan berhasil diperbarui!");
+                        resetEventForm();
+                        refreshDatabase();
+                    } else {
+                        showToast("Gagal memperbarui sesi: " + (res.error || ""), true);
+                    }
+                });
+            } else {
+                Database.addNewEvent(eventData).then(function(res) {
+                    if (res.success) {
+                        showToast("Sesi Kegiatan Berhasil Ditambahkan!");
+                        resetEventForm();
+                        refreshDatabase();
+                    } else {
+                        showToast("Gagal menambahkan sesi.", true);
+                    }
+                });
+            }
+        }
+
+        function editEvent(eventId) {
+            const event = activeEventsList.find(function(e) { return e.id === eventId; });
+            if (!event) return;
+            document.getElementById('editing-event-id').value = event.id;
+            document.getElementById('event-title').value = event.title;
+            document.getElementById('event-type').value = event.type || 'RAPAT';
+            document.getElementById('event-date').value = event.date;
+            document.getElementById('event-time').value = event.time;
+            document.getElementById('event-location').value = event.location;
+            document.getElementById('event-lat').value = event.lat || 5.5714;
+            document.getElementById('event-lng').value = event.lng || 95.3703;
+            document.getElementById('event-radius').value = event.radius || 200;
+            document.getElementById('event-status').value = event.status || 'Active';
+
+            document.getElementById('form-panel-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-uin-green mr-1.5"></i> Edit Sesi Kegiatan';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('create-event-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> SIMPAN PERUBAHAN SESI';
+
+            initAdminMap(event.lat || 5.5714, event.lng || 95.3703, event.radius || 200);
+            setLockedCoordinates(event.lat || 5.5714, event.lng || 95.3703);
+        }
+
+        function resetEventForm() {
+            document.getElementById('editing-event-id').value = '';
+            document.getElementById('event-form').reset();
+            document.getElementById('event-radius').value = 200;
+            document.getElementById('form-panel-title').innerHTML = '<i class="fa-solid fa-calendar-plus text-uin-green mr-1.5"></i> Daftarkan Sesi Baru';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('create-event-btn').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> DEPLOY KE DATABASE';
+            
+            isLocationLocked = false;
+            const badge = document.getElementById('location-lock-badge');
+            if (badge) {
+                badge.className = "text-[9px] font-bold px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200";
+                badge.innerHTML = `<i class="fa-solid fa-lock-open mr-1"></i> Belum Terkunci`;
+            }
+            initAdminMap(5.5714, 95.3703, 200);
+        }
+
+        function deleteEventForever(eventId) {
+            showCustomConfirm("Hapus Agenda Permanen", "Apakah Anda yakin ingin menghapus agenda beserta riwayat presensinya?", function() {
+                Database.deleteEvent(eventId).then(function() {
+                    showToast("Agenda berhasil dihapus!");
+                    refreshDatabase();
+                });
+            });
+        }
+
+        function viewAttendeesList(eventId, eventTitle) {
+            currentSelectedEventId = eventId;
+            document.getElementById('selected-event-display').innerText = eventTitle;
+            const tableBody = document.getElementById('attendee-table-body');
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8"><i class="fa-solid fa-spinner animate-spin text-uin-green text-2xl"></i></td></tr>';
+
+            Database.getAttendees(eventId).then(function(attendees) {
+                currentLoadedAttendees = attendees;
+                tableBody.innerHTML = '';
+                if (attendees.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">Belum ada peserta yang presensi pada sesi ini.</td></tr>';
+                    return;
+                }
+                attendees.forEach(function(att) {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 border-b border-gray-100";
+                    let sigEl = att.status && att.status.startsWith('data:image/')
+                        ? `<img src="${att.status}" class="h-9 max-w-[120px] mx-auto object-contain bg-white border border-gray-200 rounded p-0.5">`
+                        : `<span class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100">${att.status || 'Hadir'}</span>`;
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 font-bold text-gray-800">${att.name}</td>
+                        <td class="px-4 py-3 text-gray-500">${att.instansi}</td>
+                        <td class="px-4 py-3 font-mono text-gray-400 text-xs">${att.timestamp}</td>
+                        <td class="px-4 py-3 text-center">${sigEl}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            });
+        }
+
+        function exportToCSV() {
+            if (!currentSelectedEventId || currentLoadedAttendees.length === 0) {
+                showToast("Pilih Sesi Kegiatan yang memiliki data peserta terlebih dahulu!", true);
+                return;
+            }
+            let csv = "data:text/csv;charset=utf-8,No,Nama Lengkap,Asal Instansi/Prodi,Waktu Presensi\r\n";
+            currentLoadedAttendees.forEach(function(att, idx) {
+                csv += `${idx + 1},"${att.name}","${att.instansi}","${att.timestamp}"\r\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csv));
+            link.setAttribute("download", `Daftar_Hadir_${currentSelectedEventId}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // PDF Generation Engine (Resmi UIN Ar-Raniry)
+        function triggerPrintPDF(eventId) {
+            const event = activeEventsList.find(function(e) { return e.id === eventId; });
+            const title = event ? event.title : "Daftar Hadir Presensi";
+            const date = event ? event.date : "-";
+            const time = event ? event.time : "-";
+            const location = event ? event.location : "-";
+
+            const modal = document.getElementById('pdf-render-modal');
+            const printArea = document.getElementById('pdf-print-area');
+            
+            modal.classList.remove('hidden');
+
+            Database.getAttendees(eventId).then(function(attendees) {
+                let rowsHTML = '';
+                if (attendees.length === 0) {
+                    rowsHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; border: 1px solid #000;">Belum Ada Peserta Terdaftar</td></tr>`;
+                } else {
+                    attendees.forEach(function(att, idx) {
+                        let sigMarkup = att.status && att.status.startsWith('data:image/')
+                            ? `<img src="${att.status}" style="height: 38px; max-width: 120px; display: block; margin: 0 auto; object-fit: contain;">`
+                            : `<span style="font-size: 10px; font-weight: bold;">HADIR</span>`;
+
+                        rowsHTML += `
+                            <tr style="border: 1px solid #000000; page-break-inside: avoid;">
+                                <td style="padding: 8px; text-align: center; border: 1px solid #000; font-size: 11px;">${idx + 1}</td>
+                                <td style="padding: 8px; font-weight: bold; border: 1px solid #000; font-size: 11px;">${att.name}</td>
+                                <td style="padding: 8px; border: 1px solid #000; font-size: 11px;">${att.instansi}</td>
+                                <td style="padding: 8px; text-align: center; border: 1px solid #000; font-size: 10px; font-family: monospace;">${att.timestamp}</td>
+                                <td style="padding: 4px; text-align: center; border: 1px solid #000; width: 130px;">${sigMarkup}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                printArea.innerHTML = `
+                    <div style="width: 100%; text-align: left; background: #fff;">
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+                            <tr>
+                                <td style="width: 15%; text-align: center; vertical-align: middle;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/af/Lambang_UIN_Ar-Raniry.png?_=20220212032504" 
+                                         alt="Logo UIN Ar-Raniry" 
+                                         style="width: 75px; height: 75px; object-fit: contain;" 
+                                         crossorigin="anonymous">
+                                </td>
+                                <td style="width: 85%; text-align: center; vertical-align: middle;">
+                                    <h4 style="margin: 0; font-size: 13px; font-family: Arial, sans-serif; text-transform: uppercase; font-weight: bold; color: #000;">KEMENTERIAN AGAMA REPUBLIK INDONESIA</h4>
+                                    <h2 style="margin: 2px 0; font-size: 15px; font-family: Georgia, serif; font-weight: 800; text-transform: uppercase; color: #000;">UNIVERSITAS ISLAM NEGERI AR-RANIRY BANDA ACEH</h2>
+                                    <h5 style="margin: 0; font-size: 9px; font-family: Arial, sans-serif; font-weight: normal; color: #222;">
+                                        Jalan Syeikh Abdur Rauf Kopelma Darussalam Banda Aceh 23111<br>
+                                        Telepon: (0651) 7551818, Website: www.ar-raniry.ac.id
+                                    </h5>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="border-bottom: 3px double #000000; margin-bottom: 15px; width: 100%;"></div>
+
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <h3 style="text-transform: uppercase; font-weight: bold; font-size: 13px; text-decoration: underline; margin-bottom: 10px; font-family: Arial, sans-serif;">DAFTAR HADIR PRESENSI DIGITAL</h3>
+                            <table style="width: 100%; font-size: 11px; font-family: Arial, sans-serif; border-collapse: collapse; text-align: left;">
+                                <tr>
+                                    <td style="width: 22%; font-weight: bold; padding: 2px 0;">Nama Kegiatan</td>
+                                    <td style="width: 3%;">:</td>
+                                    <td style="width: 75%; font-weight: bold; text-transform: uppercase;">${title}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding: 2px 0;">Tanggal</td>
+                                    <td>:</td>
+                                    <td>${date}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding: 2px 0;">Pukul / Waktu</td>
+                                    <td>:</td>
+                                    <td>${time}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding: 2px 0;">Lokasi / Ruangan</td>
+                                    <td>:</td>
+                                    <td>${location}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; border: 2px solid #000; margin-bottom: 20px;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2; border-bottom: 2px solid #000;">
+                                    <th style="padding: 8px 4px; border: 1px solid #000; width: 5%; text-align: center; font-size: 10px; text-transform: uppercase;">No</th>
+                                    <th style="padding: 8px; border: 1px solid #000; text-align: left; font-size: 10px; text-transform: uppercase;">Nama Lengkap</th>
+                                    <th style="padding: 8px; border: 1px solid #000; text-align: left; font-size: 10px; text-transform: uppercase;">Asal Instansi/Prodi</th>
+                                    <th style="padding: 8px; border: 1px solid #000; text-align: center; font-size: 10px; text-transform: uppercase;">Waktu Presensi</th>
+                                    <th style="padding: 8px; border: 1px solid #000; text-align: center; width: 130px; font-size: 10px; text-transform: uppercase;">Tanda Tangan / Paraf</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHTML}
+                            </tbody>
+                        </table>
+
+                        <table style="width: 100%; border: none; margin-top: 25px; page-break-inside: avoid;">
+                            <tr>
+                                <td style="width: 55%; border: none;"></td>
+                                <td style="width: 45%; text-align: center; border: none; font-family: Arial, sans-serif; font-size: 11px;">
+                                    <p style="margin: 0;">Darussalam, ${todayStr}</p>
+                                    <p style="margin: 5px 0 55px 0; font-weight: bold; text-transform: uppercase;">Atasan Langsung /<br>Penanggung Jawab Kegiatan,</p>
+                                    <p style="margin: 0; text-decoration: underline; font-weight: bold;">(............................................................)</p>
+                                    <p style="margin: 2px 0 0 0; color: #444;">NIP. ............................................................</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+
+                setTimeout(function() {
+                    const opt = {
+                        margin:       [10, 10, 10, 10],
+                        filename:     `Daftar_Hadir_${eventId}.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true, logging: false },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    html2pdf().set(opt).from(printArea).save().then(function() {
+                        modal.classList.add('hidden');
+                        showToast("File PDF Berhasil Diunduh!");
+                    }).catch(function(err) {
+                        console.error("PDF generation error: ", err);
+                        modal.classList.add('hidden');
+                        showToast("Gagal memproses PDF", true);
+                    });
+                }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
