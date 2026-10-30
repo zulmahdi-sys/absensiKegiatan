@@ -374,13 +374,59 @@
                                     </select>
                                 </div>
                             </div>
-                            <div>
-                                <label for="event-location" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Lokasi / Nama Gedung *</label>
-                                <div class="relative">
-                                    <input type="text" id="event-location" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green pr-8" placeholder="Ketik nama gedung/lokasi (misal: Gedung ICT UIN Ar-Raniry)...">
-                                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-gray-400 text-xs pointer-events-none"></i>
+                            <!-- Pilihan Lokasi Terfokus Khusus Lingkup Kampus UIN Ar-Raniry -->
+                            <div class="space-y-3 bg-emerald-50/80 p-3.5 rounded-2xl border-2 border-emerald-200">
+                                <div>
+                                    <label for="preset-building-select" class="block text-[10px] font-extrabold text-uin-green uppercase tracking-wider mb-1 flex items-center justify-between">
+                                        <span><i class="fa-solid fa-building-columns text-uin-gold mr-1"></i> Pilih Gedung / Ruang Kampus UIN Ar-Raniry *</span>
+                                        <span class="text-[9px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">Kopelma Darussalam</span>
+                                    </label>
+                                    <select id="preset-building-select" onchange="selectPresetBuilding(this.value)" class="w-full bg-white border-2 border-emerald-400 rounded-xl px-3 py-2.5 text-xs font-bold text-uin-greenDark focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer shadow-sm">
+                                        <option value="">-- Pilih Lokasi Gedung / Ruangan UIN Ar-Raniry --</option>
+                                        <optgroup label="REKTORAT & UNIT UTAMA">
+                                            <option value="5.571425,95.370300|Gedung Rektorat UIN Ar-Raniry">Gedung Rektorat UIN Ar-Raniry</option>
+                                            <option value="5.571425,95.370300|Ruang Sidang Utama Rektorat (Lantai 2)">Ruang Sidang Utama Rektorat (Lantai 2)</option>
+                                            <option value="5.571425,95.370300|Ruang Rapat Biro AUPK / AAKK">Ruang Rapat Biro AUPK / AAKK</option>
+                                            <option value="5.571800,95.370100|Gedung LP2M & LPM UIN Ar-Raniry">Gedung LP2M & LPM UIN Ar-Raniry</option>
+                                        </optgroup>
+                                        <optgroup label="AUDITORIUM & AULA UTAMA">
+                                            <option value="5.570211,95.369821|Auditorium Prof. Ali Hasjmy">Auditorium Prof. Ali Hasjmy</option>
+                                            <option value="5.569300,95.368200|Teater Utama Museum Center for Peace UIN">Teater Utama Museum Center for Peace UIN</option>
+                                            <option value="5.569850,95.368900|Aula Pascasarjana UIN Ar-Raniry">Aula Pascasarjana UIN Ar-Raniry</option>
+                                            <option value="5.570800,95.369100|Aula FTK UIN Ar-Raniry">Aula FTK UIN Ar-Raniry</option>
+                                            <option value="5.571900,95.369500|Aula FEBI UIN Ar-Raniry">Aula FEBI UIN Ar-Raniry</option>
+                                        </optgroup>
+                                        <optgroup label="PUSAT LAYANAN & TEKNOLOGI">
+                                            <option value="5.572180,95.371150|Gedung ICT Center / PTIPD UIN Ar-Raniry">Gedung ICT Center / PTIPD UIN Ar-Raniry</option>
+                                            <option value="5.572180,95.371150|Laboratorium Komputer PTIPD UIN">Laboratorium Komputer PTIPD UIN</option>
+                                            <option value="5.571100,95.370700|Gedung Perpustakaan Utama UIN Ar-Raniry">Gedung Perpustakaan Utama UIN Ar-Raniry</option>
+                                            <option value="5.571500,95.370000|Gedung Pusat Bahasa UIN Ar-Raniry">Gedung Pusat Bahasa UIN Ar-Raniry</option>
+                                            <option value="5.571600,95.369900|Gedung Student Center / PUSDEV">Gedung Student Center / PUSDEV</option>
+                                            <option value="5.570600,95.370400|Masjid Fathun Qarib UIN Ar-Raniry">Masjid Fathun Qarib UIN Ar-Raniry</option>
+                                        </optgroup>
+                                        <optgroup label="FAKULTAS & PASCASARJANA">
+                                            <option value="5.570800,95.368900|Fakultas Tarbiyah & Keguruan (FTK)">Fakultas Tarbiyah & Keguruan (FTK)</option>
+                                            <option value="5.573100,95.371900|Fakultas Sains & Teknologi (FST)">Fakultas Sains & Teknologi (FST)</option>
+                                            <option value="5.571900,95.369500|Fakultas Ekonomi & Bisnis Islam (FEBI)">Fakultas Ekonomi & Bisnis Islam (FEBI)</option>
+                                            <option value="5.570100,95.370800|Fakultas Syariah & Hukum (FSH)">Fakultas Syariah & Hukum (FSH)</option>
+                                            <option value="5.571200,95.368500|Fakultas Adab & Humaniora (FAH)">Fakultas Adab & Humaniora (FAH)</option>
+                                            <option value="5.571500,95.368800|Fakultas Dakwah & Komunikasi (FDK)">Fakultas Dakwah & Komunikasi (FDK)</option>
+                                            <option value="5.570500,95.369800|Fakultas Usuluddin & Filsafat (FUF)">Fakultas Usuluddin & Filsafat (FUF)</option>
+                                            <option value="5.572500,95.371500|Fakultas Ilmu Sosial & Ilmu Pemerintahan (FISIP)">Fakultas Ilmu Sosial & Ilmu Pemerintahan (FISIP)</option>
+                                            <option value="5.572800,95.371000|Fakultas Psikologi (FPsi)">Fakultas Psikologi (FPsi)</option>
+                                            <option value="5.569850,95.368900|Gedung Pascasarjana UIN Ar-Raniry">Gedung Pascasarjana UIN Ar-Raniry</option>
+                                        </optgroup>
+                                    </select>
                                 </div>
-                                <p class="text-[9px] text-gray-400 mt-1 italic">Ketik lokasi untuk mencari tempat via Google Maps. Memilih rekomendasi akan otomatis mengunci koordinat GPS.</p>
+
+                                <div>
+                                    <label for="event-location" class="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Nama Detail Gedung / Ruang Kegiatan *</label>
+                                    <div class="relative">
+                                        <input type="text" id="event-location" required class="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-uin-green pr-8 font-semibold" placeholder="Nama lokasi otomatis terisi saat memilih pilihan di atas...">
+                                        <i class="fa-solid fa-building text-uin-green absolute right-3 top-3 text-xs pointer-events-none"></i>
+                                    </div>
+                                    <p class="text-[9px] text-emerald-800 mt-1 italic font-medium"><i class="fa-solid fa-circle-info mr-0.5 text-uin-gold"></i> Memilih dari daftar di atas akan langsung mengunci titik lokasi peta dan koordinat GPS acara secara presisi.</p>
+                                </div>
                             </div>
 
                             <!-- Interactive Google Map Position Picker -->
@@ -392,29 +438,6 @@
                                     <span id="location-lock-badge" class="text-[9px] font-bold px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200">
                                         <i class="fa-solid fa-lock-open mr-1"></i> Belum Terkunci
                                     </span>
-                                </div>
-
-                                <!-- Quick Preset Gedung Dropdown Kampus UIN Ar-Raniry -->
-                                <div class="bg-emerald-50/70 p-2.5 rounded-2xl border border-emerald-200">
-                                    <label class="block text-[9px] font-extrabold text-uin-green uppercase tracking-wider mb-1 flex items-center gap-1">
-                                        <i class="fa-solid fa-building-columns text-uin-gold"></i> Preset Gedung Spesifik Kampus UIN Ar-Raniry:
-                                    </label>
-                                    <select id="preset-building-select" onchange="selectPresetBuilding(this.value)" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-bold text-uin-greenDark focus:outline-none focus:ring-2 focus:ring-uin-green cursor-pointer shadow-sm">
-                                        <option value="">-- Pilih Gedung Spesifik Kampus --</option>
-                                        <option value="5.571425,95.370300">Gedung Rektorat UIN Ar-Raniry</option>
-                                        <option value="5.570211,95.369821">Auditorium Prof. Ali Hasjmy</option>
-                                        <option value="5.572180,95.371150">Gedung ICT Center / PTIPD</option>
-                                        <option value="5.569850,95.368900">Gedung Pascasarjana UIN</option>
-                                        <option value="5.573100,95.371900">Fakultas Sains & Teknologi (FST)</option>
-                                        <option value="5.570800,95.369100">Fakultas Tarbiyah & Keguruan (FTK)</option>
-                                        <option value="5.571900,95.369500">Fakultas Ekonomi & Bisnis Islam (FEBI)</option>
-                                        <option value="5.571200,95.368500">Fakultas Adab & Humaniora (FAH)</option>
-                                        <option value="5.570100,95.370800">Fakultas Syariah & Hukum (FSH)</option>
-                                        <option value="5.571500,95.368800">Fakultas Dakwah & Komunikasi (FDK)</option>
-                                        <option value="5.571100,95.370700">Perpustakaan Utama UIN Ar-Raniry</option>
-                                        <option value="5.571800,95.370100">Gedung LP2M & LPM UIN</option>
-                                        <option value="5.569300,95.368200">Gedung Museum Center for Peace</option>
-                                    </select>
                                 </div>
 
                                 <div id="admin-map" class="w-full h-52 rounded-xl border-2 border-slate-200 shadow-inner"></div>
@@ -657,19 +680,35 @@
 
         function selectPresetBuilding(val) {
             if (!val) return;
-            const parts = val.split(',');
-            if (parts.length === 2) {
-                const lat = parseFloat(parts[0]);
-                const lng = parseFloat(parts[1]);
-                setLockedCoordinates(lat, lng);
+            let lat, lng, buildingName = '';
+            
+            if (val.includes('|')) {
+                const parts = val.split('|');
+                const coords = parts[0].split(',');
+                lat = parseFloat(coords[0]);
+                lng = parseFloat(coords[1]);
+                buildingName = parts[1];
+            } else {
+                const coords = val.split(',');
+                lat = parseFloat(coords[0]);
+                lng = parseFloat(coords[1]);
+            }
+
+            if (buildingName) {
+                const locInput = document.getElementById('event-location');
+                if (locInput) locInput.value = buildingName;
+            } else {
                 const selectEl = document.getElementById('preset-building-select');
                 if (selectEl && selectEl.selectedIndex > 0) {
                     const selectedText = selectEl.options[selectEl.selectedIndex].text;
                     const locInput = document.getElementById('event-location');
                     if (locInput) locInput.value = selectedText;
-                    showToast("Titik lokasi dikunci di " + selectedText);
+                    buildingName = selectedText;
                 }
             }
+
+            setLockedCoordinates(lat, lng);
+            showToast("Titik lokasi dikunci di " + (buildingName || "Kampus UIN Ar-Raniry"));
         }
 
         // Signature Pad Variables & Initialization
@@ -804,14 +843,16 @@
 
             if (locationAutocomplete) return;
 
+            // Batas koordinat diperketat khusus area Kampus UIN Ar-Raniry Kopelma Darussalam
             const uinBounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(5.5500, 95.3500),
-                new google.maps.LatLng(5.6000, 95.4000)
+                new google.maps.LatLng(5.5650, 95.3650),
+                new google.maps.LatLng(5.5760, 95.3750)
             );
 
             locationAutocomplete = new google.maps.places.Autocomplete(input, {
                 bounds: uinBounds,
-                strictBounds: false,
+                strictBounds: true,
+                componentRestrictions: { country: 'id' },
                 fields: ["geometry", "name", "formatted_address"]
             });
 
@@ -821,7 +862,7 @@
                     const lat = place.geometry.location.lat();
                     const lng = place.geometry.location.lng();
                     setLockedCoordinates(lat, lng);
-                    showToast("Lokasi ditemukan & koordinat GPS otomatis dikunci!");
+                    showToast("Lokasi Kampus UIN ditemukan & koordinat GPS otomatis dikunci!");
                 }
             });
         }
