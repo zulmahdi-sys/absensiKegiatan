@@ -590,8 +590,34 @@
     <script>
         const isGasEnv = typeof google !== 'undefined' && google.script && google.script.run;
 
-        // Bridge Database Object for Google Apps Script & Standalone Environment
+        // URL Web App Google Apps Script Anda (Ganti dengan URL Deployment Web App Anda)
+        // Contoh: https://script.google.com/macros/s/AKfycbx.../exec
+        let GAS_API_URL = localStorage.getItem('UIN_GAS_API_URL') || '';
+
+        function setGasApiUrl() {
+            const input = prompt("Masukkan URL Web App Google Apps Script:", GAS_API_URL);
+            if (input !== null) {
+                GAS_API_URL = input.trim();
+                localStorage.setItem('UIN_GAS_API_URL', GAS_API_URL);
+                showToast("URL API Backend berhasil disimpan!");
+                refreshDatabase();
+            }
+        }
+
+        // Bridge Database Object for Google Apps Script & Standalone/Vercel Environment
         const Database = {
+            callApi: function(action, dataObj = {}) {
+                if (!GAS_API_URL) {
+                    return Promise.reject("URL Web App Google Apps Script belum disetel.");
+                }
+                const payload = Object.assign({ action: action }, dataObj);
+                return fetch(GAS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                }).then(function(res) { return res.json(); });
+            },
+
             getEvents: function() {
                 return new Promise(function(resolve, reject) {
                     if (isGasEnv) {
@@ -599,6 +625,8 @@
                             .withSuccessHandler(function(res) { resolve(res || []); })
                             .withFailureHandler(function(err) { reject(err); })
                             .getEvents();
+                    } else if (GAS_API_URL) {
+                        Database.callApi('getEvents').then(resolve).catch(function() { resolve([]); });
                     } else {
                         resolve(activeEventsList || []);
                     }
@@ -611,6 +639,8 @@
                             .withSuccessHandler(function(res) { resolve(res || { success: false }); })
                             .withFailureHandler(function(err) { reject(err); })
                             .addNewEvent(eventData);
+                    } else if (GAS_API_URL) {
+                        Database.callApi('addNewEvent', { data: eventData }).then(resolve).catch(reject);
                     } else {
                         resolve({ success: true, id: 'EVT-' + Date.now() });
                     }
@@ -623,6 +653,8 @@
                             .withSuccessHandler(function(res) { resolve(res || { success: false }); })
                             .withFailureHandler(function(err) { reject(err); })
                             .updateEvent(eventId, eventData);
+                    } else if (GAS_API_URL) {
+                        Database.callApi('updateEvent', { eventId: eventId, data: eventData }).then(resolve).catch(reject);
                     } else {
                         resolve({ success: true });
                     }
@@ -635,6 +667,8 @@
                             .withSuccessHandler(function(res) { resolve(res || { success: false }); })
                             .withFailureHandler(function(err) { reject(err); })
                             .deleteEvent(eventId);
+                    } else if (GAS_API_URL) {
+                        Database.callApi('deleteEvent', { eventId: eventId }).then(resolve).catch(reject);
                     } else {
                         resolve({ success: true });
                     }
@@ -647,6 +681,8 @@
                             .withSuccessHandler(function(res) { resolve(res || { success: false }); })
                             .withFailureHandler(function(err) { reject(err); })
                             .submitAttendance(attendanceData);
+                    } else if (GAS_API_URL) {
+                        Database.callApi('submitAttendance', { data: attendanceData }).then(resolve).catch(reject);
                     } else {
                         resolve({ success: true });
                     }
@@ -659,6 +695,8 @@
                             .withSuccessHandler(function(res) { resolve(res || []); })
                             .withFailureHandler(function(err) { reject(err); })
                             .getAttendees(eventId);
+                    } else if (GAS_API_URL) {
+                        Database.callApi('getAttendees', { eventId: eventId }).then(resolve).catch(function() { resolve([]); });
                     } else {
                         resolve([]);
                     }
